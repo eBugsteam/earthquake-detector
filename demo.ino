@@ -4,8 +4,16 @@
 
 Adafruit_MPU6050 mpu;
 
+#define led 3;
+#define buzzer 2;
+
+// Declare variables to store gyro data
+float xGyro, yGyro, zGyro;
+float threshold;
 void setup(void) {
   Serial.begin(115200);
+  pinMode(3,OUTPUT);
+  pinMode(2,OUTPUT);
   while (!Serial) {
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
   }
@@ -21,7 +29,6 @@ void setup(void) {
   mpu.setAccelerometerRange(MPU6050_RANGE_16_G);
   mpu.setGyroRange(MPU6050_RANGE_250_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-  //Serial.println("");
   delay(100);
 }
 
@@ -29,7 +36,23 @@ void loop() {
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
 
-  Serial.print("Temperature:");
+  // Store gyro data in the variables
+  threshold = g.gyro.x + g.gyro.y + g.gyro.z;
+
+  while(threshold >= abs(0.35))
+  {
+    alarm();
+  }
+
+
+  xGyro = g.gyro.x;
+  yGyro = g.gyro.y;
+  zGyro = g.gyro.z;
+
+  // Print temperature and acceleration data
+  Serial.print("Accuracy:");
+  Serial.print(threshold);
+  Serial.print("\tTemperature:");
   Serial.print(temp.temperature);
   Serial.print("\tx-acceleration:");
   Serial.print(a.acceleration.x);
@@ -37,12 +60,24 @@ void loop() {
   Serial.print(a.acceleration.y);
   Serial.print("\tz-acceleration:");
   Serial.print(a.acceleration.z);
+  
   Serial.print("\tx-gyro:");
-  Serial.print(g.gyro.x);
+  Serial.print(xGyro);
   Serial.print("\ty-gyro:");
-  Serial.print(g.gyro.y);
+  Serial.print(yGyro);
   Serial.print("\tz-gyro:");
-  Serial.println(g.gyro.z);
+  Serial.println(zGyro);
 
-  delay(10);
-  }
+  delay(50);
+}
+
+
+void alarm()
+{
+  digitalWrite(2,HIGH);
+  digitalWrite(3,HIGH);
+  delay(100);
+  digitalWrite(2,LOW);
+  digitalWrite(3,LOW);
+  delay(100);
+}
